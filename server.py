@@ -5,6 +5,7 @@ import os
 import sys
 import subprocess
 import time
+import uuid
 
 from database import database
 
@@ -13,8 +14,11 @@ booklist.url_map.strict_slashes = False
 
 # Get commit count and set server string in header
 try:
-    commitCount = subprocess.check_output(
-        "git rev-list --count HEAD", shell=True, stderr=subprocess.STDOUT)
+    commitCount = str(int(subprocess.check_output(
+        "git rev-list --count HEAD", shell=True, stderr=subprocess.STDOUT)))
+    if (len(str(subprocess.check_output(
+            "git diff", shell=True, stderr=subprocess.STDOUT)))) > 256:
+        commitCount += "-dev"
 except subprocess.CalledProcessError:
     commitCount = 0
 serverString = f"CoolComputerClubCiBServer/{commitCount} \
@@ -28,8 +32,44 @@ def afterRequest(response):
 
 
 @booklist.route("/", methods=["GET"])
-def sendIndex():
+def helloWorld():
     return "Hello, world!"
+
+
+## Creating accounts is not implemented
+# new accounts must be added to the db manually
+# {username: {"password": password, "accessLevel": int}}
+# accessLevel 1-5, 5 highest, 1 lowest
+
+
+@booklist.route("/login", methods=["POST"])
+def login():
+    json = flask.request.json
+    if json in [None, {}]:
+        return flask.abort(422)
+    if json["username"].lower() not in accounts.data:
+        return flask.abort(401)
+    user = accounts.data[json["username"]]
+    if user["password"] == json["password"]:
+        response = flask.make_response()
+        sessionID = str(uuid.uuid4())
+        accounts.sessions[sessionID] = {
+            "username": json["username"].lower(),
+            "accessLevel": user["accessLevel"]
+        }
+        response.set_cookie("sessionID", sessionID,
+            samesite="None", secure=True)
+        return response
+    else:
+        return flask.abort(401)
+
+
+def authorised(requiredLevel):
+    try:
+        return (requiredLevel <= 
+        accounts.sessions[flask.request.cookies.get("sessionID")]["accessLevel"])
+    except:
+        return False
 
 
 if __name__ == "__main__":
@@ -64,8 +104,9 @@ if __name__ == "__main__":
 
     # Startup
     print("Loading database")
-    db = database()
-    db.load()
+    accounts = database("accounts.json")
+    accounts.load()
+    accounts.sessions = {}
 
     # Run server
     print("Starting server")
@@ -76,4 +117,4 @@ if __name__ == "__main__":
 
     # Shut down
     print("Saving database")
-    db.save()
+    accounts.save()
