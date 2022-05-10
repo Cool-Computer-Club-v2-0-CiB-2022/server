@@ -28,6 +28,8 @@ Python/{sys.version.split()[0]}"
 @booklist.after_request
 def afterRequest(response):
     response.headers["Server"] = serverString
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    response.headers["Access-Control-Allow-Origin"] = "*"
     return response
 
 
