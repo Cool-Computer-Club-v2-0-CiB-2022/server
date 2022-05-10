@@ -33,12 +33,9 @@ def afterRequest(response):
 
 @booklist.route("/", methods=["GET"])
 def helloWorld():
-    return "Hello, world!"
-
-
-## Creating accounts is not implemented
-# new accounts must be added to the db manually
-# accessLevel 1-5, 5 highest, 1 lowest
+    return flask.redirect(
+        "https://github.com/Cool-Computer-Club-v2-0-CiB-2022/server/blob/main/APIReference.md",
+        code=302)
 
 
 @booklist.route("/login", methods=["POST"])
@@ -53,16 +50,17 @@ def login():
         FROM    accounts
         WHERE   LOWER(username) = :username
         AND     password = :password;
-    """, {"username": json["username"].lower(),
-          "password": json["password"]}).fetchone()
+        """, {"username": json["username"].lower(),
+              "password": json["password"]}).fetchone()
     con.close()
     if user:
-        response = flask.make_response()
-        sessionID = str(uuid.uuid4())
-        sessions[sessionID] = {
-            "username": user[0].lower(),
+        userInfo = {
+            "username": user[0],
             "accessLevel": user[1]
         }
+        response = flask.make_response(userInfo)
+        sessionID = str(uuid.uuid4())
+        sessions[sessionID] = userInfo
         response.set_cookie("sessionID", sessionID,
             samesite="None", secure=True)
         return response
@@ -70,10 +68,38 @@ def login():
         return flask.abort(401)
 
 
+@booklist.route("/register", methods=["POST"])
+def register():
+    json = flask.request.json
+    if not authorised(["admin", "manager"]):
+        return flask.abort(401)
+    if ("username" not in json or "password" not in json
+        or "accessLevel" not in json):
+        return flask.abort(422)
+    if json["accessLevel"] not in ["admin", "manager", "serviceDesk", "technician"]:
+        return flask.abort(422)
+    con, cur = db.connect()
+    userExists = cur.execute("""
+        SELECT  username,
+                accessLevel
+        FROM    accounts
+        WHERE   LOWER(username) = :username;
+        """, {"username": json["username"].lower()}).fetchone()
+    if not userExists:
+        db.addUser(cur, **json)
+        con.commit()
+        response = flask.make_response()
+    else:
+        response = flask.abort(409)
+    con.close()
+    return response
+
+
 def authorised(requiredLevel):
+    # Higher number means more permissions
     try:
-        return (requiredLevel <= 
-        sessions[flask.request.cookies.get("sessionID")]["accessLevel"])
+        return (sessions[flask.request.cookies.get(
+            "sessionID")]["accessLevel"] in requiredLevel)
     except:
         return False
 

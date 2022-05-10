@@ -30,10 +30,24 @@ class database:
         con, cur = self.connect()
         cur.execute("""
             CREATE TABLE IF NOT EXISTS accounts (
+                userID INTEGER PRIMARY KEY,
                 username VARCHAR not null,
                 password VARCHAR not null,
-                accessLevel INTEGER not null
-            )
+                accessLevel VARCHAR not null
+            );
         """)
+
+        # Add admin account if no accounts exist
+        if not cur.execute("SELECT userID FROM accounts;").fetchone():
+            self.addUser(cur, "Admin", "AdminPassword", "admin")
+
         con.commit()
         con.close()
+
+    def addUser(self, cur, username, password, accessLevel):
+        cur.execute("""
+            INSERT INTO accounts (username, password, accessLevel)
+            VALUES (:username, :password, :accessLevel);
+        """, {"username": username,
+              "password": password,
+              "accessLevel": accessLevel})
