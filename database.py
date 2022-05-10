@@ -36,10 +36,30 @@ class database:
                 accessLevel VARCHAR not null
             );
         """)
-
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS assets (
+                assetInventoryNumber VARCHAR PRIMARY KEY,
+                assetName VARCHAR,
+                type VARCHAR,
+                typePresence VARCHAR,
+                location VARCHAR,
+                locationCode VARCHAR,
+                locationType VARCHAR,
+                resolverQueue VARCHAR,
+                status VARCHAR,
+                subStatus VARCHAR,
+                assignedTo VARCHAR,
+                billedTo VARCHAR,
+                dateCreated VARCHAR,
+                dateActive VARCHAR,
+                dateInstalled VARCHAR,
+                dateDecomm VARCHAR,
+                maintenanceWindow VARCHAR
+            );
+        """)
         # Add admin account if no accounts exist
         if not cur.execute("SELECT userID FROM accounts;").fetchone():
-            self.addUser(cur, "Admin", "AdminPassword", "admin")
+            self.addUser(cur, "Admin", "AdminPassword", "manager")
 
         con.commit()
         con.close()

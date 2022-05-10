@@ -73,7 +73,7 @@ def login():
 @booklist.route("/register", methods=["POST"])
 def register():
     json = flask.request.json
-    if not authorised(["admin", "manager"]):
+    if not authorised(["manager"]):
         return flask.abort(401)
     if ("username" not in json or "password" not in json
         or "accessLevel" not in json):
@@ -95,6 +95,36 @@ def register():
         response = flask.abort(409)
     con.close()
     return response
+
+
+assetFields = (
+    "assetName", "type", "typePresence", "location", "locationCode", 
+    "locationType", "resolverQueue", "status", "subStatus", "assignedTo", 
+    "billedTo", "dateCreated", "dateActive", "dateInstalled", "dateDecomm", 
+    "maintenanceWindow"
+)
+
+
+@booklist.route("/asset/new", methods=["POST"])
+def assetNew():
+    json = flask.request.json
+    if not authorised(["manager", "technician"]):
+        return flask.abort(401)
+    if "assetName" not in json:
+        return flask.abort(422)
+    data = {"assetInventoryNumber": str(uuid.uuid4())}
+    command = "INSERT INTO assets VALUES (:assetInventoryNumber"
+    for field in assetFields:
+        command += ", :" + field
+        if field in json:
+            data[field] = json[field]
+        else:
+            data[field] = ""
+    con, cur = db.connect()
+    cur.execute(command + ");", data)
+    con.commit()
+    con.close()
+    return flask.make_response()
 
 
 def authorised(requiredLevel):
