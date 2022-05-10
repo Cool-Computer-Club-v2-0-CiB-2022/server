@@ -38,24 +38,30 @@ def helloWorld():
 
 ## Creating accounts is not implemented
 # new accounts must be added to the db manually
-# {username: {"password": password, "accessLevel": int}}
 # accessLevel 1-5, 5 highest, 1 lowest
 
 
 @booklist.route("/login", methods=["POST"])
 def login():
     json = flask.request.json
-    if json in [None, {}]:
+    if "username" not in json or "password" not in json:
         return flask.abort(422)
-    if json["username"].lower() not in accounts.data:
-        return flask.abort(401)
-    user = accounts.data[json["username"]]
-    if user["password"] == json["password"]:
+    con, cur = db.connect()
+    user = cur.execute("""
+        SELECT  username,
+                accessLevel
+        FROM    accounts
+        WHERE   LOWER(username) = :username
+        AND     password = :password;
+    """, {"username": json["username"].lower(),
+          "password": json["password"]}).fetchone()
+    con.close()
+    if user:
         response = flask.make_response()
         sessionID = str(uuid.uuid4())
-        accounts.sessions[sessionID] = {
-            "username": json["username"].lower(),
-            "accessLevel": user["accessLevel"]
+        sessions[sessionID] = {
+            "username": user[0].lower(),
+            "accessLevel": user[1]
         }
         response.set_cookie("sessionID", sessionID,
             samesite="None", secure=True)
@@ -67,7 +73,7 @@ def login():
 def authorised(requiredLevel):
     try:
         return (requiredLevel <= 
-        accounts.sessions[flask.request.cookies.get("sessionID")]["accessLevel"])
+        sessions[flask.request.cookies.get("sessionID")]["accessLevel"])
     except:
         return False
 
@@ -103,18 +109,12 @@ if __name__ == "__main__":
             print("Waitress is not installed, using built-in WSGI server (werkzeug).")
 
     # Startup
-    print("Loading database")
-    accounts = database("accounts.json")
-    accounts.load()
-    accounts.sessions = {}
+    db = database()
+    db.createTables()
+    sessions = {}
 
     # Run server
-    print("Starting server")
     if useWaitress:
         waitress.serve(booklist, host=host, port=port)
     else:
         booklist.run(host=host, port=port)
-
-    # Shut down
-    print("Saving database")
-    accounts.save()
