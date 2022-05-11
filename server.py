@@ -69,24 +69,24 @@ def login():
             "accessLevel": user[1]
         }
         response = flask.make_response(userInfo)
-        sessionID = str(uuid.uuid4())
-        sessions[sessionID] = userInfo
-        response.set_cookie("sessionID", sessionID,
-            samesite="None", secure=True)
+        # sessionID = str(uuid.uuid4())
+        # sessions[sessionID] = userInfo
+        # response.set_cookie("sessionID", sessionID,
+        #     samesite="None", secure=True)
         return response
     else:
         return flask.abort(401)
 
 
-@cibPrototype.route("/logout", methods=["GET"])
-def logout():
-    try:
-        del sessions[flask.request.cookies.get("sessionID")]
-    except: pass
-    response = flask.make_response()
-    response.set_cookie("sessionID", "none",
-        samesite="None", secure=True)
-    return response
+# @cibPrototype.route("/logout", methods=["GET"])
+# def logout():
+#     try:
+#         del sessions[flask.request.cookies.get("sessionID")]
+#     except: pass
+#     response = flask.make_response()
+#     response.set_cookie("sessionID", "none",
+#         samesite="None", secure=True)
+#     return response
 
 
 @cibPrototype.route("/register", methods=["POST"])
@@ -219,20 +219,17 @@ def assetDelete(assetInventoryNumber):
     con.commit()
     con.close()
 
-def authorised(requiredLevel):
-    try:
-        return (sessions[flask.request.cookies.get(
-            "sessionID")]["accessLevel"] in requiredLevel)
-    except:
-        return False
+# def authorised(requiredLevel):
+#     try:
+#         return (sessions[flask.request.cookies.get(
+#             "sessionID")]["accessLevel"] in requiredLevel)
+#     except:
+#         return False
 
 
 @cibPrototype.route("/report", methods=["GET"])
 @cibPrototype.route("/report.<format>", methods=["GET"])
 def report(format=False):
-
-    print(flask.request.cookies.get("sessionID"))
-
     # # Block unauthorised access
     # if not authorised(["manager", "serviceDesk", "technician"]):
     #     return flask.abort(401)
@@ -294,24 +291,25 @@ def report(format=False):
 
     # Do the sql query
     con, cur = db.connect()
-    query = "SELECT " + projection + " FROM assets" + restriction + orderBy
+    query = "SELECT assetInventoryNumber, " + projection + \
+        " FROM assets" + restriction + orderBy
     data = cur.execute(query, fieldWhereValues).fetchall()
     con.close()
 
     # Format the data
     if format == "json":
-        assetsList = []
+        assetsList = {}
         for asset in data:
             assetDict = {}
-            for i in range(len(asset)):
-                assetDict[fields[i]] = asset[i]
-            assetsList.append(assetDict)
+            for i in range(len(fields)):
+                assetDict[fields[i]] = asset[i+1]
+            assetsList[asset[0]] = assetDict
         return {"data": assetsList, "query": query}
     elif format == "csv":
         csv = ",".join(fields)
         for asset in data:
             csv += "\n"
-            for field in asset:
+            for field in asset[1:]:
                 csv += "\"" + field.replace("\"", "'") + "\","
             csv = csv[:-1]
             # + ", ".join(asset)
@@ -355,7 +353,7 @@ if __name__ == "__main__":
     # Startup
     db = database()
     db.createTables()
-    sessions = {}
+    # sessions = {}
 
     # Run server
     if useWaitress:

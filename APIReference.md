@@ -27,8 +27,6 @@ Username and password in a JSON
 
 Response:
 
-Session ID cookie and JSON
-
 ```json
 {
     "username": correct case for username,
@@ -41,14 +39,10 @@ Response Status Codes:
 - `401` - Not successful
 - `422` - Invalid JSON
 
-- You can also log out with GET to `/logout` which will remove the sessionID and reset the cookie
-
 ## Register
 HTTP POST [/register](https://api.cool-computer-club.com/register)
 
 Request:
-
-Session ID cookie for accound with manager access level and JSON
 
 ```json
 {
@@ -60,7 +54,6 @@ Session ID cookie for accound with manager access level and JSON
 
 Response Status Codes:
 - `200` - Success
-- `401` - Not authorised
 - `409` - User already exists
 - `422` - Invalid JSON
 
@@ -69,8 +62,6 @@ Response Status Codes:
 HTTP POST [/asset/new](https://api.cool-computer-club.com/asset/new)
 
 Request:
-
-Session ID cookie for accound with manager or technician access level and JSON
 
 Only assetName is required, everything else is optional
 
@@ -112,7 +103,6 @@ Returns the inventory number, UUID4 if auto generated
 
 Response Status Codes:
 - `200` - Success
-- `401` - Not authorised
 - `422` - Invalid JSON
 
 ## Get Asset
@@ -120,8 +110,6 @@ Response Status Codes:
 HTTP GET [/asset/get/\<assetInventoryNumber>](https://api.cool-computer-club.com/asset/get/00000000-0000-0000-0000-000000000000)
 
 Request:
-
-Session ID cookie, any access level
 
 assetInventoryNumber must be in the url
 
@@ -151,7 +139,6 @@ Response:
 
 Response Status Codes:
 - `200` - Success
-- `401` - Not authorised
 - `404` - Asset not found
 
 ## Edit Asset
@@ -160,7 +147,7 @@ HTTP PUT [/asset/edit/\<assetInventoryNumber>](https://api.cool-computer-club.co
 
 Request:
 
-Session ID cookie for accound with manager or technician access level and JSON of the data that has been changed
+JSON of the data that has been changed
 
 assetInventoryNumber can not be changed, everything else can
 
@@ -187,7 +174,6 @@ assetInventoryNumber can not be changed, everything else can
 
 Response Status Codes:
 - `200` - Success
-- `401` - Not authorised
 - `404` - Not found
 - `422` - Invalid JSON
 
@@ -197,15 +183,12 @@ HTTP DELETE [/asset/delete/\<assetInventoryNumber>](https://api.cool-computer-cl
 
 Request:
 
-Session ID cookie of admin or technician access level
-
 assetInventoryNumber must be in the url
 
 note: does not check if the asset exists, deleting an asset that doesnt exist will do nothing and respond with 200
 
 Response Status Codes:
 - `200` - Success
-- `401` - Not authorised
 
 ## Generate Report
 
@@ -215,7 +198,7 @@ Supported formats are JSON and CSV (`/report.json` and `/report.csv`). If no for
 
 Request:
 
-A session ID cookie of any access level, the projection, restriction, and order can be specified in the URL query string
+The projection, restriction, and order can be specified in the URL query string
 
 Projection:
 
@@ -273,7 +256,6 @@ A file with the same data but in csv format
 
 Response Status Codes:
 - `200` - Success
-- `401` - Not authorised
 
 ## Access Levels
 
