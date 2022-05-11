@@ -41,6 +41,8 @@ Response Status Codes:
 - `401` - Not successful
 - `422` - Invalid JSON
 
+- You can also log out with GET to `/logout` which will remove the sessionID and reset the cookie
+
 ## Register
 HTTP POST [/register](https://api.cool-computer-club.com/register)
 

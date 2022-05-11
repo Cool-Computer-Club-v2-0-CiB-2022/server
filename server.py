@@ -78,6 +78,17 @@ def login():
         return flask.abort(401)
 
 
+@cibPrototype.route("/logout", methods=["GET"])
+def logout():
+    try:
+        del sessions[flask.request.cookies.get("sessionID")]
+    except: pass
+    response = flask.make_response()
+    response.set_cookie("sessionID", "none",
+        samesite="None", secure=True)
+    return response
+
+
 @cibPrototype.route("/register", methods=["POST"])
 def register():
     json = flask.request.json
