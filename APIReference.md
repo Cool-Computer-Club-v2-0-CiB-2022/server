@@ -5,6 +5,9 @@
 - [Register](#register)  
 - Assets
   - [New Asset](#new-asset)
+  - [Get Asset](#get-asset)
+  - [Edit Asset](#edit-asset)
+  - [Delete Asset](#delete-asset)
 
 ## Login
 
@@ -68,7 +71,96 @@ Session ID cookie for accound with manager or technician access level and JSON
 
 Only assetName is required, everything else is optional
 
+assetInventoryNumber will be auto generated if not included or is already in the system
+
 Everything is currently stored as VARCHAR but this may change
+
+```json
+{
+    "assetInventoryNumber": "",
+    "assetName": "",
+    "type": "",
+    "typePresence": "",
+    "location": "",
+    "locationCode": "",
+    "locationType": "",
+    "resolverQueue": "",
+    "status": "",
+    "subStatus": "",
+    "assignedTo": "",
+    "billedTo": "",
+    "dateCreated": "",
+    "dateActive": "",
+    "dateInstalled": "",
+    "dateDecomm": "",
+    "maintenanceWindow": ""
+}
+```
+
+Response:
+
+Returns the inventory number, UUID4 if auto generated
+
+```json
+{
+    "assetInventoryNumber": "00000000-0000-0000-0000-000000000000",
+}
+```
+
+Response Status Codes:
+- `200` - Success
+- `401` - Not authorised
+- `422` - Invalid JSON
+
+## Get Asset
+
+HTTP GET [/asset/get/<assetInventoryNumber>](https://api.cool-computer-club.com/asset/get/00000000-0000-0000-0000-000000000000)
+
+Request:
+
+Session ID cookie, any access level
+
+assetInventoryNumber must be in the url
+
+```json
+
+Response:
+
+{
+    "assetInventoryNumber": "",
+    "assetName": "",
+    "type": "",
+    "typePresence": "",
+    "location": "",
+    "locationCode": "",
+    "locationType": "",
+    "resolverQueue": "",
+    "status": "",
+    "subStatus": "",
+    "assignedTo": "",
+    "billedTo": "",
+    "dateCreated": "",
+    "dateActive": "",
+    "dateInstalled": "",
+    "dateDecomm": "",
+    "maintenanceWindow": ""
+}
+```
+
+Response Status Codes:
+- `200` - Success
+- `401` - Not authorised
+- `404` - Asset not found
+
+## Edit Asset
+
+HTTP PUT [/asset/edit/<assetInventoryNumber>](https://api.cool-computer-club.com/asset/edit/00000000-0000-0000-0000-000000000000)
+
+Request:
+
+Session ID cookie for accound with manager or technician access level and JSON of the data that has been changed
+
+assetInventoryNumber can not be changed, everything else can
 
 ```json
 {
@@ -91,20 +183,27 @@ Everything is currently stored as VARCHAR but this may change
 }
 ```
 
-Response:
+Response Status Codes:
+- `200` - Success
+- `401` - Not authorised
+- `404` - Not found
+- `422` - Invalid JSON
 
-Returns a UUID4 for the inventory number
+## Delete Asset
 
-```json
-{
-    "assetInventoryNumber": "00000000-0000-0000-0000-000000000000",
-}
-```
+HTTP DELETE [/asset/delete/<assetInventoryNumber>](https://api.cool-computer-club.com/asset/delete/00000000-0000-0000-0000-000000000000)
+
+Request:
+
+Session ID cookie of admin or technician access level
+
+assetInventoryNumber must be in the url
+
+note: does not check if the asset exists, deleting an asset that doesnt exist will do nothing and respond with 200
 
 Response Status Codes:
 - `200` - Success
 - `401` - Not authorised
-- `422` - Invalid JSON
 
 ## Access Levels
 

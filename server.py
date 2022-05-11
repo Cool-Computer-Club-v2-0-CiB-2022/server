@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 
+#  __________________________ 
+# < I am slowly dying inside >
+#  -------------------------- 
+#        \   ,__,
+#         \  (oo)____
+#            (__)    )\
+#               ||--|| *
+
 import flask
 import os
 import sys
@@ -98,37 +106,109 @@ def register():
 
 
 assetFields = (
-    "assetName", "type", "typePresence", "location", "locationCode", 
-    "locationType", "resolverQueue", "status", "subStatus", "assignedTo", 
-    "billedTo", "dateCreated", "dateActive", "dateInstalled", "dateDecomm", 
-    "maintenanceWindow"
+    "assetInventoryNumber", "assetName", "type", "typePresence", "location", 
+    "locationCode", "locationType", "resolverQueue", "status", "subStatus", 
+    "assignedTo", "billedTo", "dateCreated", "dateActive", "dateInstalled", 
+    "dateDecomm", "maintenanceWindow"
 )
 
 
 @booklist.route("/asset/new", methods=["POST"])
 def assetNew():
     json = flask.request.json
-    if not authorised(["manager", "technician"]):
-        return flask.abort(401)
     if "assetName" not in json:
         return flask.abort(422)
-    data = {"assetInventoryNumber": str(uuid.uuid4())}
+
+    if not authorised(["manager", "technician"]):
+        return flask.abort(401)
+
+    if "assetInventoryNumber" in json:
+        inventoryNumber = json["assetInventoryNumber"]
+    else:
+        inventoryNumber = "none"
+    
+    con, cur = db.connect()
+    while (
+        (None != cur.execute("SELECT assetInventoryNumber FROM assets WHERE \
+            assetInventoryNumber=?;", [inventoryNumber]).fetchone())
+        or inventoryNumber == "none"
+    ):
+        inventoryNumber = str(uuid.uuid4())
+    data = {"assetInventoryNumber": inventoryNumber}
     command = "INSERT INTO assets VALUES (:assetInventoryNumber"
-    for field in assetFields:
+    for field in assetFields[1:]:
         command += ", :" + field
         if field in json:
             data[field] = json[field]
         else:
             data[field] = ""
-    con, cur = db.connect()
     cur.execute(command + ");", data)
+    con.commit()
+    con.close()
+    return {"assetInventoryNumber": inventoryNumber}
+
+
+@booklist.route("/asset/get/<assetInventoryNumber>", methods=["GET"])
+def assetGet(assetInventoryNumber):
+    if not authorised(["manager", "serviceDesk", "technician"]):
+        return flask.abort(401)
+
+    con, cur = db.connect()
+    asset = cur.execute("SELECT * FROM assets WHERE \
+            assetInventoryNumber=?;", [assetInventoryNumber]).fetchone()
+    con.close()
+    if asset:
+        assetDict = {}
+        for i in range(len(asset)):
+            assetDict[assetFields[i]] = asset[i]
+        return assetDict
+    else:
+        return flask.abort(404)
+
+
+@booklist.route("/asset/edit/<assetInventoryNumber>", methods=["PUT"])
+def assetEdit(assetInventoryNumber):
+    json = flask.request.json
+    if json in [None, {}]:
+        return flask.abort(422)
+
+    if not authorised(["manager", "technician"]):
+        return flask.abort(401)
+
+    con, cur = db.connect()
+    if (None == cur.execute("SELECT assetInventoryNumber FROM assets WHERE \
+            assetInventoryNumber=?;", [assetInventoryNumber]).fetchone()):
+        con.close()
+        return flask.abort(404)
+
+    setFields = []
+    values = []
+
+    for field in assetFields[1:]:
+        if field in json:
+            setFields.append(field + " = ?")
+            values.append(json[field])
+
+    cur.execute("UPDATE assets SET " + ", ".join(setFields) + "WHERE \
+        assetInventoryNumber = ?;", values + [assetInventoryNumber])
+
     con.commit()
     con.close()
     return flask.make_response()
 
 
+@booklist.route("/asset/delete/<assetInventoryNumber>", methods=["DELETE"])
+def assetDelete(assetInventoryNumber):
+    if not authorised(["manager", "technician"]):
+        return flask.abort(401)
+    con, cur = db.connect()
+    asset = cur.execute("DELETE FROM assets WHERE \
+            assetInventoryNumber=?;", [assetInventoryNumber]).fetchone()
+    print(asset)
+    con.commit()
+    con.close()
+
 def authorised(requiredLevel):
-    # Higher number means more permissions
     try:
         return (sessions[flask.request.cookies.get(
             "sessionID")]["accessLevel"] in requiredLevel)
