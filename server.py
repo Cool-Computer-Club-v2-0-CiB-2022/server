@@ -92,8 +92,8 @@ def logout():
 @cibPrototype.route("/register", methods=["POST"])
 def register():
     json = flask.request.json
-    if not authorised(["manager"]):
-        return flask.abort(401)
+    # if not authorised(["manager"]):
+    #     return flask.abort(401)
     if ("username" not in json or "password" not in json
         or "accessLevel" not in json):
         return flask.abort(422)
@@ -130,8 +130,8 @@ def assetNew():
     if "assetName" not in json:
         return flask.abort(422)
 
-    if not authorised(["manager", "technician"]):
-        return flask.abort(401)
+    # if not authorised(["manager", "technician"]):
+    #     return flask.abort(401)
 
     if "assetInventoryNumber" in json:
         inventoryNumber = json["assetInventoryNumber"]
@@ -161,8 +161,8 @@ def assetNew():
 
 @cibPrototype.route("/asset/get/<assetInventoryNumber>", methods=["GET"])
 def assetGet(assetInventoryNumber):
-    if not authorised(["manager", "serviceDesk", "technician"]):
-        return flask.abort(401)
+    # if not authorised(["manager", "serviceDesk", "technician"]):
+    #     return flask.abort(401)
 
     con, cur = db.connect()
     asset = cur.execute("SELECT * FROM assets WHERE \
@@ -183,8 +183,8 @@ def assetEdit(assetInventoryNumber):
     if json in [None, {}]:
         return flask.abort(422)
 
-    if not authorised(["manager", "technician"]):
-        return flask.abort(401)
+    # if not authorised(["manager", "technician"]):
+    #     return flask.abort(401)
 
     con, cur = db.connect()
     if (None == cur.execute("SELECT assetInventoryNumber FROM assets WHERE \
@@ -210,8 +210,8 @@ def assetEdit(assetInventoryNumber):
 
 @cibPrototype.route("/asset/delete/<assetInventoryNumber>", methods=["DELETE"])
 def assetDelete(assetInventoryNumber):
-    if not authorised(["manager", "technician"]):
-        return flask.abort(401)
+    # if not authorised(["manager", "technician"]):
+    #     return flask.abort(401)
     con, cur = db.connect()
     asset = cur.execute("DELETE FROM assets WHERE \
             assetInventoryNumber=?;", [assetInventoryNumber]).fetchone()
@@ -230,9 +230,12 @@ def authorised(requiredLevel):
 @cibPrototype.route("/report", methods=["GET"])
 @cibPrototype.route("/report.<format>", methods=["GET"])
 def report(format=False):
-    # Block unauthorised access
-    if not authorised(["manager", "serviceDesk", "technician"]):
-        return flask.abort(401)
+
+    print(flask.request.cookies.get("sessionID"))
+
+    # # Block unauthorised access
+    # if not authorised(["manager", "serviceDesk", "technician"]):
+    #     return flask.abort(401)
 
     # Generate the query - Projection
     # (yes i did have to look at gernots lectures for that word)
