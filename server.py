@@ -220,14 +220,68 @@ def authorised(requiredLevel):
 @cibPrototype.route("/report.<format>", methods=["GET"])
 def report(format=False):
     # Block unauthorised access
-    # if not authorised(["manager", "serviceDesk", "technician"]):
-    #     return flask.abort(401)
+    if not authorised(["manager", "serviceDesk", "technician"]):
+        return flask.abort(401)
+
+    # Generate the query - Projection
+    # (yes i did have to look at gernots lectures for that word)
+    fields = assetFields
+    showFieldsArg = str(flask.request.args.get("showFields"))
+    if showFieldsArg == "None":
+        showFieldsArg = str(flask.request.args.get("showfields"))
+    if (len(showFieldsArg) >= 3 and
+        showFieldsArg[0] == "[" and showFieldsArg[-1] == "]"):
+        showFieldsArg = showFieldsArg[1:-1].replace(" ", "").split(",")
+        thingsToShow = []
+        for field in showFieldsArg:
+            if field in assetFields:
+                thingsToShow.append(field)
+        if thingsToShow == []:
+            projection = "*"
+        else:
+            projection = ", ".join(thingsToShow)
+            fields = thingsToShow
+    else:
+        projection = "*"
+
+    # Generate the query - Restriction
+    fieldArgs = []
+    fieldWhereValues = []
+    for field in assetFields:
+        fieldArg = flask.request.args.get(field)
+        if fieldArg != None:
+            fieldArgs.append(field + " = ?")
+            if (len(fieldArg) >= 2
+                and fieldArg[0] in ["\"", "'"]
+                and fieldArg[-1] in ["\"", "'"]):
+                fieldArg = fieldArg[1:-1]
+            fieldWhereValues.append(fieldArg)
+    if fieldArgs != []:
+        restriction = " WHERE " + " AND ".join(fieldArgs)
+    else:
+        restriction = ""
+
+    # Generate the query - Sorting
+    orderByArg = flask.request.args.get("orderBy")
+    if orderByArg == None:
+        orderByArg = flask.request.args.get("orderby")
+    if orderByArg == None:
+        orderByArg = flask.request.args.get("order")
+    orderByArg = str(orderByArg).split("_")
+    orderBy = " ORDER BY "
+    if orderByArg[0] in assetFields:
+        orderBy += orderByArg[0]
+    else:
+        orderBy += "assetInventoryNumber"
+    if orderByArg[-1] == "desc":
+        orderBy += " DESC;"
+    else:
+        orderBy += " ASC;"
 
     # Do the sql query
     con, cur = db.connect()
-    fields = assetFields
-    query = "SELECT * FROM assets;"
-    data = cur.execute(query).fetchall()
+    query = "SELECT " + projection + " FROM assets" + restriction + orderBy
+    data = cur.execute(query, fieldWhereValues).fetchall()
     con.close()
 
     # Format the data

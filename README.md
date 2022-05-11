@@ -2,6 +2,10 @@
 
 Cool Computer Club v2.0's server side prototype system for CiB week 2022
 
+## [API Reference](https://github.com/Cool-Computer-Club-v2-0-CiB-2022/server/blob/main/APIReference.md)
+
+Documentation on all of the API endpoints can be found in [`APIReference.md`](https://github.com/Cool-Computer-Club-v2-0-CiB-2022/server/blob/main/APIReference.md)
+
 ## Usage
 
 To start the server run:

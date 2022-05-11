@@ -209,13 +209,50 @@ Response Status Codes:
 
 HTTP GET [/report.\<format>](https://api.cool-computer-club.com/report.json)
 
-Filtering the reports is currently not implemented, I am working on it at the moment
-
 Supported formats are JSON and CSV (`/report.json` and `/report.csv`). If no format is provided, response will be a list of tuples, the output of sqlite3, converted to string with no formatting (`/report`, not recommended).
 
 Request:
 
-A session ID cookie of any access level
+A session ID cookie of any access level, the projection, restriction, and order can be specified in the URL query string
+
+Projection:
+
+The showFields parameter must be a list of the fields that are to be included in the report. Case sensitive. By default will show everything.
+
+```
+https://api.cool-computer-club.com/report.json
+?showFields=[assetName,type,status]
+```
+
+Restriction:
+
+The query key must be the field name and the query value must be what to check it against. By default there is no restriction, multiple restrictions can be used and will be applied as an AND.
+
+```
+Show only assets that are installed:
+https://api.cool-computer-club.com/report.json
+?status="Installed"
+Show only assets that are installed and in an office:
+https://api.cool-computer-club.com/report.json
+?status="Installed"&locationType="Office"
+```
+
+Sorting:
+
+Use the orderBy parameter with the field as the value, by default will sort by assetInventoryNumber ascending. Add _desc to the end to sort by descending.
+
+```
+Sort by status ascending:
+https://api.cool-computer-club.com/report.json
+?orderBy=status
+or:
+https://api.cool-computer-club.com/report.json
+?orderBy=status_asc
+
+Sort by status descending:
+https://api.cool-computer-club.com/report.json
+?orderBy=status_desc
+```
 
 JSON response:
 
