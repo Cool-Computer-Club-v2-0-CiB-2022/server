@@ -17,8 +17,8 @@ import uuid
 
 from database import database
 
-booklist = flask.Flask(__name__)
-booklist.url_map.strict_slashes = False
+cibPrototype = flask.Flask(__name__)
+cibPrototype.url_map.strict_slashes = False
 
 # Get commit count and set server string in header
 try:
@@ -33,7 +33,7 @@ serverString = f"CoolComputerClubCiBServer/{commitCount} \
 Python/{sys.version.split()[0]}"
 
 
-@booklist.after_request
+@cibPrototype.after_request
 def afterRequest(response):
     response.headers["Server"] = serverString
     response.headers["Access-Control-Allow-Headers"] = "*"
@@ -41,14 +41,14 @@ def afterRequest(response):
     return response
 
 
-@booklist.route("/", methods=["GET"])
+@cibPrototype.route("/", methods=["GET"])
 def helloWorld():
     return flask.redirect(
         "https://github.com/Cool-Computer-Club-v2-0-CiB-2022/server/blob/main/APIReference.md",
         code=302)
 
 
-@booklist.route("/login", methods=["POST"])
+@cibPrototype.route("/login", methods=["POST"])
 def login():
     json = flask.request.json
     if "username" not in json or "password" not in json:
@@ -78,7 +78,7 @@ def login():
         return flask.abort(401)
 
 
-@booklist.route("/register", methods=["POST"])
+@cibPrototype.route("/register", methods=["POST"])
 def register():
     json = flask.request.json
     if not authorised(["manager"]):
@@ -113,7 +113,7 @@ assetFields = (
 )
 
 
-@booklist.route("/asset/new", methods=["POST"])
+@cibPrototype.route("/asset/new", methods=["POST"])
 def assetNew():
     json = flask.request.json
     if "assetName" not in json:
@@ -148,7 +148,7 @@ def assetNew():
     return {"assetInventoryNumber": inventoryNumber}
 
 
-@booklist.route("/asset/get/<assetInventoryNumber>", methods=["GET"])
+@cibPrototype.route("/asset/get/<assetInventoryNumber>", methods=["GET"])
 def assetGet(assetInventoryNumber):
     if not authorised(["manager", "serviceDesk", "technician"]):
         return flask.abort(401)
@@ -166,7 +166,7 @@ def assetGet(assetInventoryNumber):
         return flask.abort(404)
 
 
-@booklist.route("/asset/edit/<assetInventoryNumber>", methods=["PUT"])
+@cibPrototype.route("/asset/edit/<assetInventoryNumber>", methods=["PUT"])
 def assetEdit(assetInventoryNumber):
     json = flask.request.json
     if json in [None, {}]:
@@ -197,7 +197,7 @@ def assetEdit(assetInventoryNumber):
     return flask.make_response()
 
 
-@booklist.route("/asset/delete/<assetInventoryNumber>", methods=["DELETE"])
+@cibPrototype.route("/asset/delete/<assetInventoryNumber>", methods=["DELETE"])
 def assetDelete(assetInventoryNumber):
     if not authorised(["manager", "technician"]):
         return flask.abort(401)
@@ -215,6 +215,44 @@ def authorised(requiredLevel):
     except:
         return False
 
+
+@cibPrototype.route("/report", methods=["GET"])
+@cibPrototype.route("/report.<format>", methods=["GET"])
+def report(format=False):
+    # Block unauthorised access
+    # if not authorised(["manager", "serviceDesk", "technician"]):
+    #     return flask.abort(401)
+
+    # Do the sql query
+    con, cur = db.connect()
+    fields = assetFields
+    query = "SELECT * FROM assets;"
+    data = cur.execute(query).fetchall()
+    con.close()
+
+    # Format the data
+    if format == "json":
+        assetsList = []
+        for asset in data:
+            assetDict = {}
+            for i in range(len(asset)):
+                assetDict[fields[i]] = asset[i]
+            assetsList.append(assetDict)
+        return {"data": assetsList, "query": query}
+    elif format == "csv":
+        csv = ",".join(fields)
+        for asset in data:
+            csv += "\n"
+            for field in asset:
+                csv += "\"" + field.replace("\"", "'") + "\","
+            csv = csv[:-1]
+            # + ", ".join(asset)
+        response = flask.make_response(csv)
+        response.mimetype = "text/csv"
+        response.headers['Content-Disposition'] = "attachment"
+        return response
+    else:
+        return str(data)
 
 if __name__ == "__main__":
     if "--help" in sys.argv:
@@ -253,6 +291,6 @@ if __name__ == "__main__":
 
     # Run server
     if useWaitress:
-        waitress.serve(booklist, host=host, port=port)
+        waitress.serve(cibPrototype, host=host, port=port)
     else:
-        booklist.run(host=host, port=port)
+        cibPrototype.run(host=host, port=port)

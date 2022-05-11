@@ -8,6 +8,7 @@
   - [Get Asset](#get-asset)
   - [Edit Asset](#edit-asset)
   - [Delete Asset](#delete-asset)
+- [Generate Report](#generate-report) 
 
 ## Login
 
@@ -114,7 +115,7 @@ Response Status Codes:
 
 ## Get Asset
 
-HTTP GET [/asset/get/<assetInventoryNumber>](https://api.cool-computer-club.com/asset/get/00000000-0000-0000-0000-000000000000)
+HTTP GET [/asset/get/\<assetInventoryNumber>](https://api.cool-computer-club.com/asset/get/00000000-0000-0000-0000-000000000000)
 
 Request:
 
@@ -122,10 +123,9 @@ Session ID cookie, any access level
 
 assetInventoryNumber must be in the url
 
-```json
-
 Response:
 
+```json
 {
     "assetInventoryNumber": "",
     "assetName": "",
@@ -154,7 +154,7 @@ Response Status Codes:
 
 ## Edit Asset
 
-HTTP PUT [/asset/edit/<assetInventoryNumber>](https://api.cool-computer-club.com/asset/edit/00000000-0000-0000-0000-000000000000)
+HTTP PUT [/asset/edit/\<assetInventoryNumber>](https://api.cool-computer-club.com/asset/edit/00000000-0000-0000-0000-000000000000)
 
 Request:
 
@@ -191,7 +191,7 @@ Response Status Codes:
 
 ## Delete Asset
 
-HTTP DELETE [/asset/delete/<assetInventoryNumber>](https://api.cool-computer-club.com/asset/delete/00000000-0000-0000-0000-000000000000)
+HTTP DELETE [/asset/delete/\<assetInventoryNumber>](https://api.cool-computer-club.com/asset/delete/00000000-0000-0000-0000-000000000000)
 
 Request:
 
@@ -200,6 +200,37 @@ Session ID cookie of admin or technician access level
 assetInventoryNumber must be in the url
 
 note: does not check if the asset exists, deleting an asset that doesnt exist will do nothing and respond with 200
+
+Response Status Codes:
+- `200` - Success
+- `401` - Not authorised
+
+## Generate Report
+
+HTTP GET [/report.\<format>](https://api.cool-computer-club.com/report.json)
+
+Filtering the reports is currently not implemented, I am working on it at the moment
+
+Supported formats are JSON and CSV (`/report.json` and `/report.csv`). If no format is provided, response will be a list of tuples, the output of sqlite3, converted to string with no formatting (`/report`, not recommended).
+
+Request:
+
+A session ID cookie of any access level
+
+JSON response:
+
+A dict with a list of dicts in the same format of [Get Asset](#get-asset)
+
+```json
+{
+    "data": [ -- list of dicts -- ],
+    "query": "-- the SQL query used (for debugging) --"
+}
+```
+
+CSV response:
+
+A file with the same data but in csv format
 
 Response Status Codes:
 - `200` - Success
