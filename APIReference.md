@@ -91,7 +91,8 @@ Everything is currently stored as VARCHAR but this may change
     "dateActive": "",
     "dateInstalled": "",
     "dateDecomm": "",
-    "maintenanceWindow": ""
+    "maintenanceWindow": "",
+    "operatingSystem": ""
 }
 ```
 
@@ -137,7 +138,8 @@ Response:
     "dateActive": "",
     "dateInstalled": "",
     "dateDecomm": "",
-    "maintenanceWindow": ""
+    "maintenanceWindow": "",
+    "operatingSystem": ""
 }
 ```
 
@@ -172,7 +174,8 @@ assetInventoryNumber can not be changed, everything else can
     "dateActive": "",
     "dateInstalled": "",
     "dateDecomm": "",
-    "maintenanceWindow": ""
+    "maintenanceWindow": "",
+    "operatingSystem": ""
 }
 ```
 

@@ -54,7 +54,8 @@ class database:
                 dateActive VARCHAR,
                 dateInstalled VARCHAR,
                 dateDecomm VARCHAR,
-                maintenanceWindow VARCHAR
+                maintenanceWindow VARCHAR,
+                operatingSystem VARCHAR
             );
         """)
         # Add admin account if no accounts exist
