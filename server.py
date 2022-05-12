@@ -139,7 +139,7 @@ assetFields = (
     "assetInventoryNumber", "assetName", "type", "typePresence", "location", 
     "locationCode", "locationType", "resolverQueue", "status", "subStatus", 
     "assignedTo", "billedTo", "dateCreated", "dateActive", "dateInstalled", 
-    "dateDecomm", "maintenanceWindow, operatingSystem"
+    "dateDecomm", "maintenanceWindow", "operatingSystem"
 )
 
 
