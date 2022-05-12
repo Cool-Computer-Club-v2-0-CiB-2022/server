@@ -57,6 +57,10 @@ Response Status Codes:
 - `409` - User already exists
 - `422` - Invalid JSON
 
+## User List
+
+HTTP GET [/users](https://api.cool-computer-club.com/users)
+
 ## New Asset
 
 HTTP POST [/asset/new](https://api.cool-computer-club.com/asset/new)

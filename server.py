@@ -97,7 +97,7 @@ def register():
     if ("username" not in json or "password" not in json
         or "accessLevel" not in json):
         return flask.abort(422)
-    if json["accessLevel"] not in ["admin", "manager", "serviceDesk", "technician"]:
+    if json["accessLevel"] not in ["manager", "serviceDesk", "technician", "general"]:
         return flask.abort(422)
     con, cur = db.connect()
     userExists = cur.execute("""
@@ -115,6 +115,25 @@ def register():
     con.close()
     return response
 
+
+@cibPrototype.route("/users", methods=["GET"])
+def userList():
+    con, cur = db.connect()
+    data = cur.execute("""
+        SELECT userID, username, accessLevel
+        FROM accounts;
+    """).fetchall()
+    con.close()
+
+    fields = ("userID", "username", "accessLevel")
+    users = {}
+    for asset in data:
+        assetDict = {}
+        for i in range(len(fields)):
+            assetDict[fields[i]] = asset[i]
+        users[asset[0]] = assetDict
+    return users
+    
 
 assetFields = (
     "assetInventoryNumber", "assetName", "type", "typePresence", "location", 
